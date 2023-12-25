@@ -1,10 +1,19 @@
 import torch
 import torch.nn as nn
+from fcanet import MultiSpectralAttentionLayer
+
 class DKGenerator():
-    def __init__(self, c, k, spatial_size):
+    def __init__(self, c, spatial_size, sigma, k, args):
+        self.channel = c
+        self.h1 = sigma
+        self.h2 = k ** 2
         self.SKk = k
         self.SKconv= nn.Conv2d(c, k ** 2, kernel_size=1)
         self.SKbn = nn.BatchNorm2d(spatial_size ** 2)  # BN层
+        self.CKbn = nn.BatchNorm2d(self.channel)
+        c2wh = dict([(512, 11), (640, self.spatial_size)])
+        self.channel_att = MultiSpectralAttentionLayer(c, c2wh[c], c2wh[c], sigma=self.h1, k=self.k, freq_sel_method='low16')
+        self.args = args
 
     def forward(self,data):
         """
@@ -30,6 +39,11 @@ class DKGenerator():
         Returns:
 
         """
+        channel_kernel = self.channel_att(data)
+        channel_kernel = self.CKbn(channel_kernel)
+        channel_kernel = channel_kernel.flatten(-2)
+        channel_kernel = channel_kernel.squeeze().view(channel_kernel.shape[0], self.channel, -1)
+        return channel_kernel
 
     def SKNetwork(self, data):
         """
