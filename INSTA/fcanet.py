@@ -35,7 +35,7 @@ def get_freq_indices(method):
 
 
 class MultiSpectralAttentionLayer(torch.nn.Module):
-    def __init__(self, channel, dct_h, dct_w, sigma, k, freq_sel_method='top16'):
+    def __init__(self, channel, dct_h, dct_w, sigma, k,device,freq_sel_method='top16'):
         super(MultiSpectralAttentionLayer, self).__init__()
         self.sigma = sigma
         self.k = k
@@ -49,7 +49,8 @@ class MultiSpectralAttentionLayer(torch.nn.Module):
         # make the frequencies in different sizes are identical to a 5x5 frequency space
         # eg, (2,2) in 10x10 is identical to (1,1) in5x5
 
-        self.dct_layer = MultiSpectralDCTLayer(dct_h, dct_w, mapper_x, mapper_y, channel)
+        self.dct_layer = MultiSpectralDCTLayer(dct_h, dct_w, mapper_x, mapper_y, channel).to(device)
+
         self.fc = nn.Sequential(
             nn.Linear(channel, int(channel*self.sigma), bias=False),
             nn.ReLU(inplace=True),
@@ -86,7 +87,6 @@ class MultiSpectralDCTLayer(nn.Module):
 
         # fixed DCT init
         self.register_buffer('weight', self.get_dct_filter(height, width, mapper_x, mapper_y, channel))
-
         # fixed random init
         # self.register_buffer('weight', torch.rand(channel, height, width))
 

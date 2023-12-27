@@ -1,25 +1,31 @@
 import torch
 import torch.nn as nn
-from fcanet import MultiSpectralAttentionLayer
+from INSTA.fcanet import MultiSpectralAttentionLayer
 
-class DKGenerator():
-    def __init__(self, c, spatial_size, sigma, k, args):
+class DKGenerator(nn.Module):
+    # 去掉传入参数args
+    def __init__(self, c, spatial_size, sigma, k,device):
+        super().__init__()
         self.channel = c
         self.h1 = sigma
         self.h2 = k ** 2
+        self.k = k
         self.SKk = k
+        self.spatial_size = spatial_size
         self.SKconv= nn.Conv2d(c, k ** 2, kernel_size=1)
         self.SKbn = nn.BatchNorm2d(spatial_size ** 2)  # BN层
         self.CKbn = nn.BatchNorm2d(self.channel)
         c2wh = dict([(512, 11), (640, self.spatial_size)])
-        self.channel_att = MultiSpectralAttentionLayer(c, c2wh[c], c2wh[c], sigma=self.h1, k=self.k, freq_sel_method='low16')
-        self.args = args
+        self.channel_att = MultiSpectralAttentionLayer(c, c2wh[c], c2wh[c], sigma=self.h1, k=self.k,device = device, freq_sel_method='low16').to(device)
+
+
+        # self.args = args
 
     def forward(self,data):
         """
         生成动态核
         Args:
-            data:
+            data:[N*K,c,h,w]
 
         Returns:
 
@@ -36,14 +42,14 @@ class DKGenerator():
         Args:
             data:
 
-        Returns:
+        Returns:[b,c,h,w,k,k]
 
         """
         channel_kernel = self.channel_att(data)
         channel_kernel = self.CKbn(channel_kernel)
         channel_kernel = channel_kernel.flatten(-2)
         channel_kernel = channel_kernel.squeeze().view(channel_kernel.shape[0], self.channel, -1)
-        return channel_kernel
+        return channel_kernel.unsqueeze(-2)
 
     def SKNetwork(self, data):
         """
