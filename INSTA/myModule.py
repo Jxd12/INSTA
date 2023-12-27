@@ -41,6 +41,11 @@ class myModule():
             data:Size为[episode_size,way_num * shot_num, 特征图(大小由backbone决定)]
         Returns:
         """
+        s_size = support_data.size()
+        q_size = query_data.size()
+        support_data = support_data.reshape(s_size[0], s_size[1], 640, 5, 5)
+        query_data = query_data.reshape(q_size[0], q_size[1], 640, 5, 5)
+
 
         support_out = []
         query_out = []
@@ -72,4 +77,9 @@ class myModule():
             query_ = nn.AdaptiveAvgPool2d(1)((self.unfold(query_data, int((taskKernel.shape[-1] + 1) / 2 - 1),
                                                                 taskKernel.shape[-1]) * taskKernel)).squeeze()
             query_out.append(query_data + query_)
-        return torch.stack(support_out),torch.stack(query_out)
+
+        support_out = torch.stack(support_out)
+        query_out = torch.stack(query_out)
+        support_out = torch.mean(support_out, dim=(3, 4))
+        query_out = torch.mean(query_out,dim=(3,4))
+        return support_out,query_out
