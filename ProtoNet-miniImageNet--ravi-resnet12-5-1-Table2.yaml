@@ -43,6 +43,7 @@ optimizer:
   other: null
 parallel_part:
 - emb_func
+- INSTA #不跑INSTA的删除这行
 port: 48828
 pretrain_path: ./results/ProtoNet-miniImageNet--ravi-resnet12-5-1-Table2/checkpoints/emb_func_best.pth #TODO
 query_num: 15
