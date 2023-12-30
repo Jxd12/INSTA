@@ -4,8 +4,9 @@ import torch.nn as nn
 from INSTA.DKGenerator import DKGenerator
 from INSTA.CLModule import CLModule
 
-class myModule():
+class myModule(nn.Module):
     def __init__(self):
+        super(myModule, self).__init__()
         # TODO；config中获得参数
         self.way_num = 5
         self.shot_num = 1
@@ -80,6 +81,9 @@ class myModule():
 
         support_out = torch.stack(support_out)
         query_out = torch.stack(query_out)
-        support_out = torch.mean(support_out, dim=(3, 4))
-        query_out = torch.mean(query_out,dim=(3,4))
+        s_size = support_out.size()
+        q_size = query_out.size()
+
+        support_out = support_out.view(s_size[0],s_size[1],s_size[-1] * s_size[-2] * s_size[-3])
+        query_out = query_out.view(q_size[0],q_size[1],q_size[-1] * q_size[-2] * q_size[-3])
         return support_out,query_out

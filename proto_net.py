@@ -67,7 +67,6 @@ class ProtoNet(MetricModel):
         super(ProtoNet, self).__init__(**kwargs)
         self.proto_layer = ProtoLayer()
         self.loss_func = nn.CrossEntropyLoss()
-        # TODO:从config中获得
         self.INSTA = myModule()
 
     def set_forward(self, batch):
