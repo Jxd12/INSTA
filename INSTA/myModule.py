@@ -72,18 +72,22 @@ class myModule(nn.Module):
 
             # 卷积操作？
             unfold_feature = self.unfold(support_data, int((self.k + 1) / 2 - 1), self.k)  ## self-implemented unfold operation
+            adapted_s = (unfold_feature * dynamicKernel).mean(dim=(-1, -2)).squeeze(-1).squeeze(-1) + support_data
+            adapted_s = nn.AdaptiveAvgPool2d(1)(adapted_s).squeeze(-1).squeeze(-1)
 
-            support_out.append((unfold_feature * dynamicKernel).mean(dim=(-1, -2)).squeeze(-1).squeeze(-1))
+            support_out.append(adapted_s)
 
             query_ = nn.AdaptiveAvgPool2d(1)((self.unfold(query_data, int((taskKernel.shape[-1] + 1) / 2 - 1),
                                                                 taskKernel.shape[-1]) * taskKernel)).squeeze()
-            query_out.append(query_data + query_)
+            adapted_q = query_data + query_
+            adapted_q = nn.AdaptiveAvgPool2d(1)(adapted_q).squeeze(-1).squeeze(-1)
+            query_out.append(adapted_q)
 
         support_out = torch.stack(support_out)
         query_out = torch.stack(query_out)
-        s_size = support_out.size()
-        q_size = query_out.size()
+        # s_size = support_out.size()
+        # q_size = query_out.size()
 
-        support_out = support_out.view(s_size[0],s_size[1],s_size[-1] * s_size[-2] * s_size[-3])
-        query_out = query_out.view(q_size[0],q_size[1],q_size[-1] * q_size[-2] * q_size[-3])
+        # support_out = support_out.view(s_size[0],s_size[1],s_size[-1] * s_size[-2] * s_size[-3])
+        # query_out = query_out.view(q_size[0],q_size[1],q_size[-1] * q_size[-2] * q_size[-3])
         return support_out,query_out
