@@ -3,7 +3,7 @@ augment_times: 1
 augment_times_query: 1
 backbone:
   kwargs:
-    avg_pool: true
+    avg_pool: false
     is_flatten: false
     keep_prob: 0.0
     maxpool_last2: true
